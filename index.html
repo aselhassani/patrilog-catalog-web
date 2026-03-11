@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sélecteur Immobilier - Lots de Terrain</title>
+  <style>
+    :root {
+      --primary: #185933;
+      --primary-dark: #0f3d23;
+      --accent: #d9c29a;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --bg: #f4f3f0;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --border: #e2e0da;
+      --radius: 8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+      color: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+    }
+
+    header img {
+      height: 80px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+    }
+
+    .container { max-width: 1500px; margin: 0 auto; padding: 1.5rem; }
+
+    /* ── Stats cards ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border-left: 4px solid var(--primary);
+    }
+
+    .stat-card .label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.05em; }
+    .stat-card .value { font-size: 1.5rem; font-weight: 700; margin-top: 0.25rem; }
+    .stat-card.habitat { border-left-color: var(--success); }
+    .stat-card.commerce { border-left-color: var(--warning); }
+    .stat-card.info { border-left-color: #8b5cf6; }
+
+    /* ── Filters ── */
+    .filters-panel {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .filters-panel h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .filter-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+
+    .filter-group input,
+    .filter-group select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      background: var(--bg);
+      transition: border-color 0.2s;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1.25rem;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline { background: transparent; color: var(--text-light); border: 1px solid var(--border); }
+    .btn-outline:hover { background: var(--bg); }
+
+    /* ── Table ── */
+    .table-wrapper {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      overflow-x: auto;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-header h2 { font-size: 0.95rem; font-weight: 600; }
+    .result-count { font-size: 0.8rem; color: var(--text-light); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    thead th {
+      background: #f8fafc;
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+      user-select: none;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    thead th.sortable { cursor: pointer; }
+    thead th.sortable:hover { color: var(--primary); }
+    thead th .sort-icon { margin-left: 0.3rem; font-size: 0.65rem; }
+
+    tbody td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr.no-price { opacity: 0.45; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-habitat { background: #dcfce7; color: #166534; }
+    .badge-commerce { background: #fef3c7; color: #92400e; }
+    .badge-etat { background: #e0e7ff; color: #3730a3; }
+    .badge-vendu { background: #fee2e2; color: #991b1b; }
+    .badge-disponible { background: #dcfce7; color: #166534; }
+
+    /* ── Quality index bar ── */
+    .index-cell { display: flex; align-items: center; gap: 0.5rem; min-width: 140px; }
+
+    .index-bar {
+      flex: 1;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      min-width: 50px;
+    }
+
+    .index-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .index-value {
+      font-weight: 700;
+      font-size: 0.85rem;
+      min-width: 3rem;
+      text-align: right;
+    }
+
+    .index-excellent { color: var(--success); }
+    .index-excellent .index-bar-fill { background: var(--success); }
+    .index-good { color: var(--primary); }
+    .index-good .index-bar-fill { background: var(--primary); }
+    .index-average { color: var(--warning); }
+    .index-average .index-bar-fill { background: var(--warning); }
+    .index-poor { color: var(--danger); }
+    .index-poor .index-bar-fill { background: var(--danger); }
+
+    .price { font-weight: 600; }
+    .surface { font-weight: 500; }
+
+    /* ── Loading / Empty ── */
+    .loading, .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-light);
+    }
+
+    .loading::after {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 32px;
+      margin: 1rem auto 0;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .info-banner {
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.8rem;
+      color: #1e40af;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .filters-grid { grid-template-columns: 1fr 1fr; }
+      .stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="patrilog_logo.svg" alt="Patrilog">
+</header>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats" id="stats"></div>
+
+  <!-- Filtres -->
+  <div class="filters-panel">
+    <h2>🔍 Filtres</h2>
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label>Destination</label>
+        <select id="filterDestination">
+          <option value="">Toutes</option>
+          <option value="Habitat">Habitat</option>
+          <option value="RDC Commercial">RDC Commercial</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Projet</label>
+        <select id="filterProjet">
+          <option value="">Tous</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Type</label>
+        <select id="filterType">
+          <option value="">Tous</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>État</label>
+        <select id="filterEtat">
+          <option value="">Tous</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Surface min (m²)</label>
+        <input type="number" id="filterSurfaceMin" placeholder="Ex : 80" min="0" step="1">
+      </div>
+      <div class="filter-group">
+        <label>Surface max (m²)</label>
+        <input type="number" id="filterSurfaceMax" placeholder="Ex : 300" min="0" step="1">
+      </div>
+      <div class="filter-group">
+        <label>Prix min (DH)</label>
+        <input type="number" id="filterPrixMin" placeholder="Ex : 200000" min="0" step="1000">
+      </div>
+      <div class="filter-group">
+        <label>Prix max (DH)</label>
+        <input type="number" id="filterPrixMax" placeholder="Ex : 1000000" min="0" step="1000">
+      </div>
+      <div class="filter-group">
+        <label>Masquer prix = 0</label>
+        <select id="filterHideZero">
+          <option value="yes" selected>Oui</option>
+          <option value="no">Non</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <div class="filter-actions">
+          <button class="btn btn-primary" onclick="applyFilters()">Appliquer</button>
+          <button class="btn btn-outline" onclick="resetFilters()">Réinitialiser</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="info-banner" id="infoBanner">
+    ℹ️ Indice qualité = prix/m² du lot ÷ prix moyen/m² de sa catégorie. <strong>Plus l'indice est bas (&lt;1), meilleur est le rapport qualité/prix.</strong> Seuls les lots avec un prix &gt; 0 sont utilisés pour le calcul des moyennes.
+  </div>
+
+  <!-- Tableau -->
+  <div class="table-wrapper">
+    <div class="table-header">
+      <h2>📋 Liste des lots</h2>
+      <span class="result-count" id="resultCount"></span>
+    </div>
+    <div id="tableContainer">
+      <div class="loading">Chargement des données depuis Patrilog…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  CONFIGURATION
+// ╚══════════════════════════════════════════════════════════════════╝
+const DATA_URL = "/api/getLots.php?filter_surface=[0,1500]&filter_type=all&filter_destination=all";
+
+// ── State ──
+let allLots = [];
+let filteredLots = [];
+let sortColumn = "indice";
+let sortDirection = "asc"; // asc = meilleur indice (plus bas) en premier
+
+// ── Normalise la destination de l'API ──
+function normalizeDestination(dest) {
+  if (!dest) return "Habitat";
+  // L'API renvoie "Habitat" ou "Habitat à RDC commercial" (avec \u00e0)
+  if (dest.toLowerCase().includes("rdc") || dest.toLowerCase().includes("commercial")) {
+    return "RDC Commercial";
+  }
+  return "Habitat";
+}
+
+// ── Chargement ──
+async function loadData() {
+  try {
+    const response = await fetch(DATA_URL);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const rawData = await response.json();
+
+    // Mapper les données API vers notre modèle interne
+    allLots = rawData.map(item => ({
+      num: item.num || "—",
+      surface: item.surf || 0,
+      destination: normalizeDestination(item.destination),
+      destinationOrigine: item.destination || "",
+      prix: item.prix_total || 0,
+      type: item.type || "—",
+      etat: item.etat || "—",
+      projet: item.projet_nom || "—",
+      id: item.id,
+    }));
+
+    populateFilterOptions();
+    computeIndices();
+    applyFilters();
+  } catch (err) {
+    document.getElementById("tableContainer").innerHTML =
+      `<div class="empty-state">❌ Erreur de chargement : ${err.message}<br>Vérifiez votre connexion ou l'URL de l'API.</div>`;
+  }
+}
+
+// ── Remplir les options de filtres dynamiquement ──
+function populateFilterOptions() {
+  const projets = [...new Set(allLots.map(l => l.projet))].sort();
+  const types = [...new Set(allLots.map(l => l.type))].sort();
+  const etats = [...new Set(allLots.map(l => l.etat))].sort();
+
+  const addOptions = (selectId, values) => {
+    const sel = document.getElementById(selectId);
+    values.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  };
+
+  addOptions("filterProjet", projets);
+  addOptions("filterType", types);
+  addOptions("filterEtat", etats);
+}
+
+// ── Calcul des indices de qualité ──
+// IMPORTANT : seuls les lots avec prix > 0 servent au calcul de la moyenne
+function computeIndices() {
+  const habitatWithPrice = allLots.filter(l => l.destination === "Habitat" && l.prix > 0);
+  const commerceWithPrice = allLots.filter(l => l.destination === "RDC Commercial" && l.prix > 0);
+
+  const avgPrixM2Habitat = habitatWithPrice.length
+    ? habitatWithPrice.reduce((sum, l) => sum + l.prix / l.surface, 0) / habitatWithPrice.length
+    : 1;
+
+  const avgPrixM2Commerce = commerceWithPrice.length
+    ? commerceWithPrice.reduce((sum, l) => sum + l.prix / l.surface, 0) / commerceWithPrice.length
+    : 1;
+
+  allLots.forEach(lot => {
+    if (lot.prix > 0 && lot.surface > 0) {
+      lot.prixM2 = lot.prix / lot.surface;
+      const avg = lot.destination === "Habitat" ? avgPrixM2Habitat : avgPrixM2Commerce;
+      lot.indice = lot.prixM2 / avg;
+      // Majoration de 15% pour les lots RDC Commercial (valorisation commerce)
+      if (lot.destination === "RDC Commercial") {
+        lot.indice *= 1.2;
+      }
+    } else {
+      lot.prixM2 = 0;
+      lot.indice = null; // pas calculable
+    }
+  });
+
+  // Mise à jour stats
+  const allHabitat = allLots.filter(l => l.destination === "Habitat");
+  const allCommerce = allLots.filter(l => l.destination === "RDC Commercial");
+  renderStats(allHabitat, allCommerce, habitatWithPrice, commerceWithPrice, avgPrixM2Habitat, avgPrixM2Commerce);
+}
+
+// ── Stats ──
+function renderStats(allH, allC, hPrice, cPrice, avgH, avgC) {
+  document.getElementById("stats").innerHTML = `
+    <div class="stat-card info">
+      <div class="label">Total lots chargés</div>
+      <div class="value">${allLots.length}</div>
+    </div>
+    <div class="stat-card habitat">
+      <div class="label">Lots Habitat</div>
+      <div class="value">${allH.length} <small style="font-size:0.6em;color:var(--text-light)">(${hPrice.length} avec prix)</small></div>
+    </div>
+    <div class="stat-card commerce">
+      <div class="label">Lots RDC Commercial</div>
+      <div class="value">${allC.length} <small style="font-size:0.6em;color:var(--text-light)">(${cPrice.length} avec prix)</small></div>
+    </div>
+    <div class="stat-card habitat">
+      <div class="label">Prix moy/m² Habitat</div>
+      <div class="value">${formatPrice(avgH)}</div>
+    </div>
+    <div class="stat-card commerce">
+      <div class="label">Prix moy/m² Commerce</div>
+      <div class="value">${formatPrice(avgC)}</div>
+    </div>
+  `;
+}
+
+// ── Filtres ──
+function applyFilters() {
+  const dest = document.getElementById("filterDestination").value;
+  const projet = document.getElementById("filterProjet").value;
+  const type = document.getElementById("filterType").value;
+  const etat = document.getElementById("filterEtat").value;
+  const surfMin = parseFloat(document.getElementById("filterSurfaceMin").value) || 0;
+  const surfMax = parseFloat(document.getElementById("filterSurfaceMax").value) || Infinity;
+  const prixMin = parseFloat(document.getElementById("filterPrixMin").value) || 0;
+  const prixMax = parseFloat(document.getElementById("filterPrixMax").value) || Infinity;
+  const hideZero = document.getElementById("filterHideZero").value === "yes";
+
+  filteredLots = allLots.filter(lot => {
+    if (dest && lot.destination !== dest) return false;
+    if (projet && lot.projet !== projet) return false;
+    if (type && lot.type !== type) return false;
+    if (etat && lot.etat !== etat) return false;
+    if (lot.surface < surfMin || lot.surface > surfMax) return false;
+    if (hideZero && lot.prix === 0) return false;
+    if (lot.prix < prixMin) return false;
+    if (lot.prix > prixMax) return false;
+    return true;
+  });
+
+  sortAndRender();
+}
+
+function resetFilters() {
+  document.getElementById("filterDestination").value = "";
+  document.getElementById("filterProjet").value = "";
+  document.getElementById("filterType").value = "";
+  document.getElementById("filterEtat").value = "";
+  document.getElementById("filterSurfaceMin").value = "";
+  document.getElementById("filterSurfaceMax").value = "";
+  document.getElementById("filterPrixMin").value = "";
+  document.getElementById("filterPrixMax").value = "";
+  document.getElementById("filterHideZero").value = "yes";
+  applyFilters();
+}
+
+// ── Tri ──
+function toggleSort(column) {
+  if (sortColumn === column) {
+    sortDirection = sortDirection === "asc" ? "desc" : "asc";
+  } else {
+    sortColumn = column;
+    sortDirection = "asc";
+  }
+  sortAndRender();
+}
+
+function sortAndRender() {
+  const dir = sortDirection === "asc" ? 1 : -1;
+
+  filteredLots.sort((a, b) => {
+    let va = a[sortColumn];
+    let vb = b[sortColumn];
+    // Les indices null en dernier
+    if (va === null && vb === null) return 0;
+    if (va === null) return 1;
+    if (vb === null) return -1;
+    if (typeof va === "string") va = va.toLowerCase();
+    if (typeof vb === "string") vb = vb.toLowerCase();
+    if (va < vb) return -1 * dir;
+    if (va > vb) return 1 * dir;
+    return 0;
+  });
+
+  renderTable();
+}
+
+// ── Rendu tableau ──
+function renderTable() {
+  const sortIcon = (col) => {
+    if (sortColumn !== col) return '<span class="sort-icon">⇅</span>';
+    return sortDirection === "asc"
+      ? '<span class="sort-icon">▲</span>'
+      : '<span class="sort-icon">▼</span>';
+  };
+
+  document.getElementById("resultCount").textContent = `${filteredLots.length} lot(s) affiché(s)`;
+
+  if (filteredLots.length === 0) {
+    document.getElementById("tableContainer").innerHTML =
+      '<div class="empty-state">Aucun lot ne correspond aux filtres sélectionnés.</div>';
+    return;
+  }
+
+  const cols = [
+    { key: "num",         label: "N° Lot",        sortable: true },
+    { key: "projet",      label: "Projet",         sortable: true },
+    { key: "destination", label: "Destination",    sortable: true },
+    { key: "type",        label: "Type",           sortable: true },
+    { key: "surface",     label: "Surface (m²)",   sortable: true },
+    { key: "prix",        label: "Prix total (DH)", sortable: true },
+    { key: "prixM2",      label: "Prix/m² (DH)",   sortable: true },
+    { key: "etat",        label: "État",            sortable: true },
+    { key: "indice",      label: "Indice Qualité",  sortable: true },
+  ];
+
+  let html = '<table><thead><tr>';
+  cols.forEach(col => {
+    const cls = col.sortable ? 'class="sortable" onclick="toggleSort(\'' + col.key + '\')"' : '';
+    html += `<th ${cls}>${col.label}${col.sortable ? sortIcon(col.key) : ''}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  filteredLots.forEach(lot => {
+    const hasPrice = lot.prix > 0 && lot.indice !== null;
+    const indexClass = hasPrice ? getIndexClass(lot.indice) : '';
+    const barWidth = hasPrice ? Math.min(lot.indice * 50, 100) : 0;
+    const trClass = lot.prix === 0 ? ' class="no-price"' : '';
+
+    const etatBadge = lot.etat === "Vendu"
+      ? '<span class="badge badge-vendu">Vendu</span>'
+      : `<span class="badge badge-disponible">${esc(lot.etat)}</span>`;
+
+    html += `<tr${trClass}>
+      <td><strong>${esc(lot.num)}</strong></td>
+      <td>${esc(lot.projet)}</td>
+      <td><span class="badge ${lot.destination === 'Habitat' ? 'badge-habitat' : 'badge-commerce'}">${esc(lot.destination)}</span></td>
+      <td>${esc(lot.type)}</td>
+      <td class="surface">${lot.surface.toLocaleString('fr-FR')} m²</td>
+      <td class="price">${lot.prix > 0 ? formatPrice(lot.prix) : '—'}</td>
+      <td class="price">${lot.prixM2 > 0 ? formatPrice(lot.prixM2) : '—'}</td>
+      <td>${etatBadge}</td>
+      <td>${hasPrice ? `
+        <div class="index-cell ${indexClass}">
+          <div class="index-bar"><div class="index-bar-fill" style="width:${barWidth}%"></div></div>
+          <span class="index-value">${lot.indice.toFixed(3)}</span>
+        </div>` : '<span style="color:var(--text-light)">—</span>'}
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById("tableContainer").innerHTML = html;
+}
+
+// ── Helpers ──
+function getIndexClass(indice) {
+  if (indice <= 0.85) return "index-excellent";
+  if (indice <= 1.0)  return "index-good";
+  if (indice <= 1.15) return "index-average";
+  return "index-poor";
+}
+
+function formatPrice(value) {
+  return value.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' DH';
+}
+
+function esc(str) {
+  if (str == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(str);
+  return d.innerHTML;
+}
+
+// ── Init ──
+loadData();
+</script>
+
+</body>
+</html>
