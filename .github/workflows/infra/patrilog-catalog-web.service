@@ -1,0 +1,12 @@
+[Unit]
+Description=Patrilog Catalog Web
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/var/www/patrilog-catalog-web
+ExecStart=/usr/bin/python3 /var/www/atrilog-catalog-web/server.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

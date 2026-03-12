@@ -1,0 +1,41 @@
+name: Deploy application
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prd
+
+    steps:
+      - name: Deploy via SSH with password
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            set -e
+
+            APP_DIR="/var/www/patrilog-catalog-web"
+            REPO="https://github.com/${{ github.repository }}.git"
+
+            echo "Creating directory if needed"
+            mkdir -p $APP_DIR
+            cd $APP_DIR
+
+            if [ ! -d ".git" ]; then
+              echo "First deployment: cloning repo"
+              git clone $REPO .
+            else
+              echo "Updating repository"
+              git pull origin master
+            fi
+
+            echo "Restarting service"
+            sudo systemctl restart patrilog-catalog-web || true
+
+            echo "Deployment completed"
