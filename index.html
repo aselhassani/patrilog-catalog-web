@@ -421,6 +421,14 @@ async function loadData() {
       id: item.id,
     }));
 
+    // Filter by exclude_etat if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const excludeEtat = urlParams.get('exclude_etat');
+    if (excludeEtat) {
+      const excluded = excludeEtat.split(',');
+      allLots = allLots.filter(lot => !excluded.includes(lot.etat));
+    }
+
     populateFilterOptions();
     computeIndices();
     applyFilters();
