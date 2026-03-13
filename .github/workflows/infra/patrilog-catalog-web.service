@@ -5,7 +5,8 @@ After=network.target
 [Service]
 User=root
 WorkingDirectory=/var/www/patrilog-catalog-web
-ExecStart=/usr/bin/python3 /var/www/atrilog-catalog-web/server.py
+ExecStart=/bin/python3 /var/www/patrilog-catalog-web/server.py
+WorkingDirectory=/var/www/patrilog-catalog-web
 Restart=always
 
 [Install]
